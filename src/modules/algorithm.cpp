@@ -6,7 +6,7 @@ int evaluate(class server_data &m, int &score)
 	return 0;
 }
 
-std::pair<enum move_operating, bool> algorithm(class server_data m)
+std::pair<enum move_operating, bool> algorithm(class server_data &m)
 {
 	// TODO
 	return std::make_pair(move_op_stay, false);
