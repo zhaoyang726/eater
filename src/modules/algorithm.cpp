@@ -1,13 +1,13 @@
 #include "modules/algorithm.h"
 
-int evaluate(class server_data m, uint32_t &score)
+int evaluate(class server_data &m, int &score)
 {
 	// TODO
 	return 0;
 }
 
-int algorithm(class server_data m)
+std::pair<enum move_operating, bool> algorithm(class server_data m)
 {
 	// TODO
-	return 0;
+	return std::make_pair(move_op_stay, false);
 }
