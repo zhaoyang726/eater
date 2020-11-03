@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <vector>
-#include "network.h"
+#include "types.h"
 
 class server_data {
 	public:
