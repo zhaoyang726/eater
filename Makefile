@@ -1,8 +1,10 @@
 export
+CC := g++
+CPPFLAGS := -g
+CPPFLAGS += -I$(CURDIR)/include/
+
 OUTDIR := $(CURDIR)/out
-objs := $(patsubst %.c, %.o, $(wildcard $(CURDIR)/src/*/*.c))
-CFLAGS := -g
-CFLAGS += -I$(CURDIR)/include/
+objs := $(patsubst %.cpp, %.o, $(wildcard $(CURDIR)/src/*/*.cpp))
 
 .PHONY: default
 default: src clean

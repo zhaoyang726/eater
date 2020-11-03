@@ -1,10 +1,10 @@
-test_objs := $(patsubst %.c, %.o, $(shell find * -name "*.c"))
+test_objs := $(patsubst %.cpp, %.o, $(shell find * -name "*.cpp"))
 
 .PHONY: default
 default: $(test_objs) $(objs)
-	for object in $(shell find * -name "*.c" | sed 's/\.c//;'); do \
+	for object in $(shell find * -name "*.cpp" | sed 's/\.cpp//;'); do \
 		filename=`echo $${object} | sed 's/\//./g;'`; \
-		cc -o $${filename}.test $${object}.o $(objs); \
+		$(CC) -o $${filename}.test $${object}.o $(objs) -lpthread; \
 	done;
 
 .PHONY: install

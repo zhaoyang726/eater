@@ -1,11 +1,11 @@
-main_objs := $(patsubst %.c, %.o, $(wildcard *.c))
-.PHONY: hhee_analysis
-hhee_analysis: $(main_objs) $(objs)
-	cc -o hhee_analysis $(main_objs) $(objs)
+main_objs := $(patsubst %.cpp, %.o, $(wildcard *.cpp))
+.PHONY: client
+client: $(objs)
+	$(CC) -o client main.cpp $(objs)
 
 .PHONY: install
 install:
-	mv hhee_analysis $(OUTDIR)/
+	mv client $(OUTDIR)/
 
 .PHONY: clean
 clean:
