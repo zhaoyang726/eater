@@ -25,5 +25,5 @@ for file in out/*.test; do
 	fi
 done
 
-echo -e "$0: \033[32mtest success\033[0m"
+echo -e "$0: \033[32mtest finished\033[0m"
 exit 0

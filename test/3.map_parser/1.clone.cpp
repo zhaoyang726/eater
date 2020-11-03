@@ -1,5 +1,6 @@
 #include "modules/map_parser.h"
 #include "utils/assert.h"
+#include <string.h>
 
 int main()
 {
