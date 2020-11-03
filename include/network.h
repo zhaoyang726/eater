@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-/* 连接服务器
+/* 连接服务器，发送key
  * 参数:
  * - ip_addr: ip地址，0xAABBCCDD为AA.BB.CC.DD
  * - port: 端口号
@@ -10,7 +10,7 @@
  * */
 int connect(uint32_t ip_addr, uint32_t port);
 
-/* 开启读线程
+/* 开启读线程，处理心跳包和数据包
  * 返回值:
  * - 0: 成功
  * - 1: 失败
