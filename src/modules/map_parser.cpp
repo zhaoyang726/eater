@@ -39,6 +39,17 @@ int server_data::get_score_by_pos(int pos)
 	return 0;
 }
 
+void server_data::get_my_pos(int &row, int &col)
+{
+	// TODO
+}
+
+int server_data::get_my_score()
+{
+	// TODO
+	return 0;
+}
+
 int server_data::move(enum move_operating move_op)
 {
 	// TODO

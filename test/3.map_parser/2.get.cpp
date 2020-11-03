@@ -40,6 +40,13 @@ int main()
 
 	assert(data.get(5, 5) == 0);
 
+	int row, col;
+	data.get_my_pos(row, col);
+	assert(row == 1);
+	assert(col == 0);
+
+	assert(data.get_my_score() == 0);
+
 	assert(data.get_score_by_pos(5) == 0);
 	assert(data.get_score_by_pos(6) == 1);
 	assert(data.get_score_by_pos(7) == 2);

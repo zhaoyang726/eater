@@ -25,6 +25,12 @@ class server_data {
 		// 获得pos位置的玩家分数
 		int get_score_by_pos(int pos);
 
+		// 获得自己的位置
+		void get_my_pos(int &row, int &col);
+
+		// 获得自己的分数，返回值是分数
+		int get_my_score();
+
 		/* 移动
 		 * 返回值:
 		 * - 0: 成功
