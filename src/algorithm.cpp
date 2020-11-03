@@ -2,12 +2,12 @@
 
 int evaluate(class server_data m, uint32_t &score)
 {
-	// stub
+	// TODO
 	return 0;
 }
 
 int algorithm(class server_data m)
 {
-	// stub
+	// TODO
 	return 0;
 }

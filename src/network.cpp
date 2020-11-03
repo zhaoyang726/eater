@@ -2,36 +2,36 @@
 
 int connect(uint32_t ip_addr, uint32_t port)
 {
-	// stub
+	// TODO
 	return 0;
 }
 
 int start_read_thread()
 {
-	// stub
+	// TODO
 	return 0;
 }
 
 int finish_read_thread()
 {
-	// stub
+	// TODO
 	return 0;
 }
 
 int disconnect()
 {
-	// stub
+	// TODO
 	return 0;
 }
 
 int get_server_data(char *buf)
 {
-	// stub
+	// TODO
 	return 0;
 }
 
 int send_operating(enum move_operating move_op, bool is_fire)
 {
-	// stub
+	// TODO
 	return 0;
 }

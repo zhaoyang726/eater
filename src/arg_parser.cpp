@@ -2,18 +2,18 @@
 
 int arg_parse(int argc, const char **argv)
 {
-	// stub
+	// TODO
 	return 0;
 }
 
 int get_ip(uint32_t &addr)
 {
-	// stub
+	// TODO
 	return 0;
 }
 
 int get_port(uint32_t &port)
 {
-	// stub
+	// TODO
 	return 0;
 }
