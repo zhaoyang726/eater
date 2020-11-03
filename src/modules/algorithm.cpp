@@ -1,4 +1,4 @@
-#include "algorithm.h"
+#include "modules/algorithm.h"
 
 int evaluate(class server_data m, uint32_t &score)
 {

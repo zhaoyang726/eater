@@ -1,4 +1,4 @@
-#include "network.h"
+#include "modules/network.h"
 
 int connect(uint32_t ip_addr, uint32_t port)
 {

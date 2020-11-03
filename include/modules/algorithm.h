@@ -1,4 +1,4 @@
-#include "map_parser.h"
+#include "modules/map_parser.h"
 
 // 评估一个局势，返回分数
 int evaluate(class server_data m, uint32_t &score);
