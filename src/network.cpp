@@ -18,6 +18,18 @@ int finish_read_thread()
 	return 0;
 }
 
+int start_heartbeat_thread()
+{
+	// TODO
+	return 0;
+}
+
+int finish_heartbeat_thread()
+{
+	// TODO
+	return 0;
+}
+
 int disconnect()
 {
 	// TODO

@@ -10,7 +10,7 @@
  * */
 int connect(uint32_t ip_addr, uint32_t port);
 
-/* 开启读线程，处理心跳包和数据包
+/* 开启读线程，响应START/MAP/GAMEOVER数据包
  * 返回值:
  * - 0: 成功
  * - 1: 失败
@@ -23,6 +23,21 @@ int start_read_thread();
  * - 1: 失败
  * */
 int finish_read_thread();
+
+/* 开启心跳线程
+ * 返回值：
+ * - 0: 成功
+ * - 1: 失败
+ * */
+int start_heartbeat_thread();
+
+/* 关闭心跳线程
+ * 返回值：
+ * - 0: 成功
+ * - 1: 失败
+ * */
+int finish_heartbeat_thread();
+
 
 /* 与服务器断开连接
  * 返回值:
