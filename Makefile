@@ -1,6 +1,7 @@
 export
 CC := g++
 CPPFLAGS := -g
+CPPFLAGS += -std=c++11
 CPPFLAGS += -I$(CURDIR)/include/
 
 OUTDIR := $(CURDIR)/out
@@ -11,6 +12,7 @@ default: src clean
 
 .PHONY: src
 src:
+	[-e $(OUTDIR)] || mkdir -p $(OUTDIR)
 	make -C src/
 	make install -C src/
 
