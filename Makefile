@@ -3,6 +3,7 @@ CC := g++
 CPPFLAGS := -g
 CPPFLAGS += -std=c++11
 CPPFLAGS += -I$(CURDIR)/include/
+LDFLAGS := -lpthread
 
 OUTDIR := $(CURDIR)/out
 objs := $(patsubst %.cpp, %.o, $(wildcard $(CURDIR)/src/*/*.cpp))
