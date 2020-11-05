@@ -14,8 +14,10 @@
 #include "modules/network.h"
 static int read_signal = 0;
 static int heart_signal = 0;
-std::thread *read_t = NULL;
-std::thread *heart_t = NULL;
+static std::thread *read_t = NULL;
+static std::thread *heart_t = NULL;
+static int send_code = 1, send_reday = 2;
+int send_message(int flag);
 
 
 int connect(uint32_t ip_addr, uint32_t port)
@@ -38,11 +40,12 @@ int connect(uint32_t ip_addr, uint32_t port)
     addr.sin_port = htons(port);
     char ip_address[20];
     sprintf(ip_address, "%d.%d.%d.%d",
-        (ip_addr & 0xff000000) >> 24,
-        (ip_addr & 0x00ff0000) >> 16,
-        (ip_addr & 0x0000ff00) >> 8,
-        (ip_addr & 0x000000ff) >> 0);
-    if( inet_pton(AF_INET, ip_address, &addr.sin_addr) <= 0){
+            (ip_addr & 0xff000000) >> 24,
+            (ip_addr & 0x00ff0000) >> 16,
+            (ip_addr & 0x0000ff00) >> 8,
+            (ip_addr & 0x000000ff) >> 0);
+
+    if (inet_pton(AF_INET, ip_address, &addr.sin_addr) <= 0) {
         printf("inet_pton error for %s\n", ip_address);
         return 0;
     }
@@ -51,14 +54,27 @@ int connect(uint32_t ip_addr, uint32_t port)
         printf("connect fail %s\n", strerror(errno));
         return EXIT_FAILURE;
     }
-    start_heartbeat_thread();
-    //sendsocket();
-    //start_read_thread()
+
+    if (!send_message(send_code)) {
+        if (start_heartbeat_thread()) {
+            printf("error to start heartbeat_thread!");
+        }
+    } else {
+        printf("send code faild!");
+    }
+
+    if (!send_message(send_reday)) {
+        if (start_read_thread()) {
+            printf("error to start heartbeat_thread!");
+        }
+    } else {
+        printf("send ready faild!");
+    }
+
     return 0;
 }
 
-int sendsocket() {
-
+int send_message(int flag) {
     char key[] = "c96f4d7661c94cbb9706469649a7cbbc";
     char ready[] = "(READY)";
     int st = socket(AF_INET, SOCK_STREAM, 0);
@@ -70,14 +86,29 @@ int sendsocket() {
         return 1;
     }
 
-    if (send(sockfd, key, strlen(key), 0) < 0) {
-        printf("send msg error: %s(errno: %d)\n", strerror(errno), errno);
-        return 1;
-    } else {
-        if (send(sockfd, ready, strlen(ready), 0) < 0) {
-            printf("send msg error: %s(errno: %d)\n", strerror(errno), errno);
-            return 1;
-        }
+    switch (flag) {
+        case 1:
+            if (send(sockfd, key, strlen(key), 0) < 0) {
+                printf("send msg error: %s(errno: %d)\n", strerror(errno), errno);
+                return 1;
+            } else if(){
+
+            }
+
+            break;
+
+        case 2:
+            if (send(sockfd, ready, strlen(ready), 0) < 0) {
+                printf("send msg error: %s(errno: %d)\n", strerror(errno), errno);
+                return 1;
+            } else if(){
+
+            }
+
+            break;
+
+        default:
+            break;
     }
 
     heart_signal = 0;
@@ -93,14 +124,30 @@ int _read() {//
     }
 
     while (!read_signal) {
-        //memset(s, 0, sizeof(s));
+        memset(s, 0, sizeof(s));
         int rc = recv(sockfd, s, sizeof(s), 0);
 
         if (rc <= 0) { //代表socket被关闭（0）或者出错（-1）
+            printf("socket disconnect!");
             break;
         }
+        if (s=="[START 1 25]")
+        {
+            
+        }
+        
+        if (s=="[OK]")
+        {
+            
+        }
+        if (s=="[GAMEOVER]")
+        {
+            
+        }
+        
 
         printf("client receive:%s\n", s);
+        sleep(1);
     }
 
     return 0;
@@ -122,6 +169,7 @@ int heartbeat() {
 
         sleep(1);
     }
+
     heart_signal = 0;
     return 0;
 }
@@ -152,6 +200,7 @@ int finish_heartbeat_thread() {
 }
 
 int disconnect() {
+
     return 0;
 }
 int get_server_data(char *buf) {
@@ -172,21 +221,20 @@ int get_server_data(char *buf) {
     }
 
     printf("client receive:%s\n", buf);
-
     return 0;
 }
 
 int send_operating(enum move_operating move_op, bool is_fire) {//??
-   /* char s[1024];
-    int sockfd;
+    /* char s[1024];
+     int sockfd;
 
-    if (move_op == 0 && is_fire) {}
+     if (move_op == 0 && is_fire) {}
 
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        printf("create socket error: %s(errno: %d)\n", strerror(errno), errno);
-        return 1;
-    }
+     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+         printf("create socket error: %s(errno: %d)\n", strerror(errno), errno);
+         return 1;
+     }
 
-    int sc = send(sockfd, s, strlen(s), 0);*/
+     int sc = send(sockfd, s, strlen(s), 0);*/
     return 0;
 }
