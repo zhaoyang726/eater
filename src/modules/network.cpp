@@ -14,6 +14,9 @@
 #include "modules/network.h"
 static int read_signal = 0;
 static int heart_signal = 0;
+std::thread *read_t = NULL;
+std::thread *heart_t = NULL;
+
 
 int connect(uint32_t ip_addr, uint32_t port)
 
@@ -33,22 +36,34 @@ int connect(uint32_t ip_addr, uint32_t port)
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
-    addr.sin_addr.s_addr = htonl(ip_addr);
+    char ip_address[20];
+    sprintf(ip_address, "%d.%d.%d.%d",
+        (ip_addr & 0xff000000) >> 24,
+        (ip_addr & 0x00ff0000) >> 16,
+        (ip_addr & 0x0000ff00) >> 8,
+        (ip_addr & 0x000000ff) >> 0);
+    if( inet_pton(AF_INET, ip_address, &addr.sin_addr) <= 0){
+        printf("inet_pton error for %s\n", ip_address);
+        return 0;
+    }
 
     if (connect(st, (struct sockaddr *) & addr, sizeof(addr)) == -1) {
         printf("connect fail %s\n", strerror(errno));
         return EXIT_FAILURE;
     }
-
+    start_heartbeat_thread();
+    //sendsocket();
+    //start_read_thread()
     return 0;
 }
 
 int sendsocket() {
+
     char key[] = "c96f4d7661c94cbb9706469649a7cbbc";
+    char ready[] = "(READY)";
     int st = socket(AF_INET, SOCK_STREAM, 0);
     int sc = send(st, key, strlen(key), 0);
     int sockfd;
-    char ready[] = "(READY)";
 
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         printf("create socket error: %s(errno: %d)\n", strerror(errno), errno);
@@ -78,7 +93,7 @@ int _read() {//
     }
 
     while (!read_signal) {
-        memset(s, 0, sizeof(s));
+        //memset(s, 0, sizeof(s));
         int rc = recv(sockfd, s, sizeof(s), 0);
 
         if (rc <= 0) { //代表socket被关闭（0）或者出错（-1）
@@ -100,8 +115,6 @@ int heartbeat() {
     }
 
     while (!heart_signal) {
-        memset(beat, 0, sizeof(beat));
-
         if (send(sockfd, beat, strlen(beat), 0) < 0) {
             printf("send msg error: %s(errno: %d)\n", strerror(errno), errno);
             return 1;
@@ -109,29 +122,32 @@ int heartbeat() {
 
         sleep(1);
     }
-
     heart_signal = 0;
     return 0;
 }
 int start_read_thread() {
-    std::thread t1(_read);
-    t1.join();
+    read_t = new std::thread(_read);
     return 0;
 }
 
 int finish_read_thread() {
     heart_signal = 1;
+    read_t->join();
+    free(read_t);
+    std::thread *read_t = NULL;
     return 0;
 }
 
 int start_heartbeat_thread() {
-    std::thread t2(heartbeat);
-    t2.join();
+    heart_t = new std::thread(heartbeat);
     return 0;
 }
 
 int finish_heartbeat_thread() {
     heart_signal = 1;
+    heart_t->join();
+    free(heart_t);
+    std::thread *heart_t = NULL;
     return 0;
 }
 

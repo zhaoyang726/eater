@@ -19,7 +19,7 @@ int main()
 {
 	int ret;
 
-	ret = connect(0xff000001, 9000);
+	ret = connect(0x7f000001, 9000);
 	assert(ret == 1);
 
 	std::thread server_thread([]() ->void {
@@ -83,7 +83,7 @@ int main()
 	});
 
 	sleep(1);
-	ret = connect(0xff000001, 9000);
+	ret = connect(0x7f000001, 9000);
 	assert(ret == 0);
 
 	ret = start_heartbeat_thread();
