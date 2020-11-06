@@ -12,8 +12,12 @@
 #include <netinet/in.h>
 #include <thread>
 #include "modules/network.h"
+#include <string>
 static int read_signal = 0;
 static int heart_signal = 0;
+static char ok[20] = {0};
+static char start[20] = {0};
+static char game[20] = {0};
 static std::thread *read_t = NULL;
 static std::thread *heart_t = NULL;
 static int send_code = 1, send_reday = 2;
@@ -58,17 +62,21 @@ int connect(uint32_t ip_addr, uint32_t port)
     if (!send_message(send_code)) {
         if (start_heartbeat_thread()) {
             printf("error to start heartbeat_thread!");
+            return 1;
         }
     } else {
         printf("send code faild!");
+        return 1;
     }
 
     if (!send_message(send_reday)) {
         if (start_read_thread()) {
             printf("error to start heartbeat_thread!");
+            return 1;
         }
     } else {
         printf("send ready faild!");
+        return 1;
     }
 
     return 0;
@@ -78,7 +86,7 @@ int send_message(int flag) {
     char key[] = "c96f4d7661c94cbb9706469649a7cbbc";
     char ready[] = "(READY)";
     int st = socket(AF_INET, SOCK_STREAM, 0);
-    int sc = send(st, key, strlen(key), 0);
+    int sc = send(st, key, sizeof(key), 0);
     int sockfd;
 
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -88,26 +96,26 @@ int send_message(int flag) {
 
     switch (flag) {
         case 1:
-            if (send(sockfd, key, strlen(key), 0) < 0) {
+            if (send(sockfd, key, sizeof(key), 0) < 0) {
                 printf("send msg error: %s(errno: %d)\n", strerror(errno), errno);
                 return 1;
-            } else if(){
-
             }
 
             break;
 
         case 2:
-            if (send(sockfd, ready, strlen(ready), 0) < 0) {
+
+            //if (start == "1" || game == "3") {
+            if (send(sockfd, ready, sizeof(ready), 0) < 0) {
                 printf("send msg error: %s(errno: %d)\n", strerror(errno), errno);
                 return 1;
-            } else if(){
-
             }
 
+            //}
             break;
 
         default:
+            printf("send_message has done!");
             break;
     }
 
@@ -130,21 +138,15 @@ int _read() {//
         if (rc <= 0) { //代表socket被关闭（0）或者出错（-1）
             printf("socket disconnect!");
             break;
+        } else if (sizeof(s) == 12) {
+            strncpy(start, "1", 1);
+        } else if (s == "[OK]") {
+            strncpy(ok, "2", 1);
+        } else if (s == "[GAMEOVER]") {
+            strncpy(start, "3", 1);
+        } else {
+            get_server_data(s);//不是前面的数据则是地图数据，传给get_server_data
         }
-        if (s=="[START 1 25]")
-        {
-            
-        }
-        
-        if (s=="[OK]")
-        {
-            
-        }
-        if (s=="[GAMEOVER]")
-        {
-            
-        }
-        
 
         printf("client receive:%s\n", s);
         sleep(1);
@@ -162,7 +164,7 @@ int heartbeat() {
     }
 
     while (!heart_signal) {
-        if (send(sockfd, beat, strlen(beat), 0) < 0) {
+        if (send(sockfd, beat, sizeof(beat), 0) < 0) {
             printf("send msg error: %s(errno: %d)\n", strerror(errno), errno);
             return 1;
         }
@@ -181,8 +183,8 @@ int start_read_thread() {
 int finish_read_thread() {
     heart_signal = 1;
     read_t->join();
-    free(read_t);
     std::thread *read_t = NULL;
+    delete read_t;
     return 0;
 }
 
@@ -194,47 +196,65 @@ int start_heartbeat_thread() {
 int finish_heartbeat_thread() {
     heart_signal = 1;
     heart_t->join();
-    free(heart_t);
     std::thread *heart_t = NULL;
+    delete heart_t;
     return 0;
 }
 
 int disconnect() {
-
     return 0;
 }
 int get_server_data(char *buf) {
-    //char s[1024];
+    printf("client receive:%s\n", buf);
+    return 0;
+}
+
+int send_operating(enum move_operating move_op, bool is_fire) {
+    char s[1024];
     int sockfd;
+    memset(s, '\0', sizeof(s));
+
+    if (move_op == move_op_stay && is_fire != 0) {//不动，发炮？
+        strncpy(s, "A@v", 3);
+    }
+
+    if (move_op == 	move_op_up && is_fire != 0) {
+        strncpy(s, "A@wv", 4);
+    }
+
+    if (move_op == move_op_up && is_fire == 0) {
+        strncpy(s, "A@w ", 4);
+    }
+
+    if (move_op == move_op_down && is_fire != 0) {
+        strncpy(s, "A@sv", 4);
+    }
+
+    if (move_op == move_op_down && is_fire == 0) {
+        strncpy(s, "A@s ", 4);
+    }
+
+    if (move_op == move_op_left && is_fire != 0) {
+        strncpy(s, "A@av", 4);
+    }
+
+    if (move_op == move_op_left && is_fire == 0) {
+        strncpy(s, "A@a ", 4);
+    }
+
+    if (move_op == move_op_right && is_fire != 0) {
+        strncpy(s, "A@dv", 4);
+    }
+
+    if (move_op == move_op_right && is_fire == 0) {
+        strncpy(s, "A@d ", 4);
+    }
 
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         printf("create socket error: %s(errno: %d)\n", strerror(errno), errno);
         return 1;
     }
 
-    //memset(buf, 0, sizeof(buf));
-    int rc = recv(sockfd, buf, sizeof(buf), 0);
-
-    if (rc <= 0) { //代表socket被关闭（0）或者出错（-1）
-        printf("socket disconnect!");
-        return 1;
-    }
-
-    printf("client receive:%s\n", buf);
-    return 0;
-}
-
-int send_operating(enum move_operating move_op, bool is_fire) {//??
-    /* char s[1024];
-     int sockfd;
-
-     if (move_op == 0 && is_fire) {}
-
-     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-         printf("create socket error: %s(errno: %d)\n", strerror(errno), errno);
-         return 1;
-     }
-
-     int sc = send(sockfd, s, strlen(s), 0);*/
+    int sc = send(sockfd, s, sizeof(s), 0);
     return 0;
 }
