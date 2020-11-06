@@ -61,8 +61,7 @@ int connect(uint32_t ip_addr, uint32_t port)
     }
 
     printf("%s: %d\n", __FILE__, __LINE__);
-
-    if (!send_message(send_code)) {
+    /*if (!send_message(send_code)) {
         if (start_heartbeat_thread()) {
             printf("error to start heartbeat_thread!");
             return 1;
@@ -83,7 +82,7 @@ int connect(uint32_t ip_addr, uint32_t port)
         printf("send ready faild!");
         return 1;
     }
-
+    */
     return 0;
 }
 
@@ -121,29 +120,34 @@ int send_message(int flag) {
 }
 int _read() {//
     char s[1024];
-
-    if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        printf("create socket error: %s(errno: %d)\n", strerror(errno), errno);
-        return 1;
-    }
+    printf("%s: %d\n", __FILE__, __LINE__);
+    char key[] = "(c96f4d7661c94cbb9706469649a7cbbc)";
+    send(fd, key, sizeof(key), 0);
+    printf("%s: %d\n", __FILE__, __LINE__);
 
     while (!read_signal) {
         memset(s, 0, sizeof(s));
         int rc = recv(fd, s, sizeof(s), 0);
+        printf("%s: %d\n", __FILE__, __LINE__);
 
         if (rc <= 0) { //代表socket被关闭（0）或者出错（-1）
             printf("socket disconnect!");
-            break;
-        } else if (sizeof(s) == 12) {
+            break;git
+        }
+
+        printf("%s: %d\n", __FILE__, __LINE__);
+        /*else if (sizeof(s) == 12) {
             strncpy(start, "1", 1);
         } else if (s == "[OK]") {
             strncpy(ok, "2", 1);
         } else if (s == "[GAMEOVER]") {
             strncpy(start, "3", 1);
-        } else {
-            get_server_data(s);//不是前面的数据则是地图数据，传给get_server_data
         }
 
+        else {
+            get_server_data(s);//不是前面的数据则是地图数据，传给get_server_data
+        }
+        */
         printf("client receive:%s\n", s);
         sleep(1);
     }
@@ -151,7 +155,10 @@ int _read() {//
     return 0;
 }
 int heartbeat() {
+    char key[] = "(c96f4d7661c94cbb9706469649a7cbbc)";
     char beat[] = "(H)";
+    char s[1024];
+    send(fd, key, sizeof(key), 0);
     printf("%s: %d\n", __FILE__, __LINE__);
 
     while (!heart_signal) {
@@ -160,7 +167,8 @@ int heartbeat() {
             return 1;
         }
 
-        printf("%s: %d\n", __FILE__, __LINE__);
+        recv(fd, s, sizeof(s), 0);
+        printf("recive %s\n", s);
         sleep(1);
     }
 
@@ -194,6 +202,7 @@ int finish_heartbeat_thread() {
 }
 
 int disconnect() {
+    close(fd);
     return 0;
 }
 int get_server_data(char *buf) {
