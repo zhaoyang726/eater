@@ -21,6 +21,7 @@ static char game[20] = {0};
 static std::thread *read_t = NULL;
 static std::thread *heart_t = NULL;
 static int send_code = 1, send_reday = 2;
+static int fd = 0;
 int send_message(int flag);
 
 
@@ -37,7 +38,7 @@ int connect(uint32_t ip_addr, uint32_t port)
         return  1;
     }
 
-    int st = socket(AF_INET, SOCK_STREAM, 0);
+    fd = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
@@ -54,10 +55,12 @@ int connect(uint32_t ip_addr, uint32_t port)
         return 0;
     }
 
-    if (connect(st, (struct sockaddr *) & addr, sizeof(addr)) == -1) {
+    if (connect(fd, (struct sockaddr *) & addr, sizeof(addr)) == -1) {
         printf("connect fail %s\n", strerror(errno));
         return EXIT_FAILURE;
     }
+
+    printf("%s: %d\n", __FILE__, __LINE__);
 
     if (!send_message(send_code)) {
         if (start_heartbeat_thread()) {
@@ -68,6 +71,8 @@ int connect(uint32_t ip_addr, uint32_t port)
         printf("send code faild!");
         return 1;
     }
+
+    printf("%s: %d\n", __FILE__, __LINE__);
 
     if (!send_message(send_reday)) {
         if (start_read_thread()) {
@@ -83,20 +88,12 @@ int connect(uint32_t ip_addr, uint32_t port)
 }
 
 int send_message(int flag) {
-    char key[] = "c96f4d7661c94cbb9706469649a7cbbc";
+    char key[] = "(c96f4d7661c94cbb9706469649a7cbbc)";
     char ready[] = "(READY)";
-    int st = socket(AF_INET, SOCK_STREAM, 0);
-    int sc = send(st, key, sizeof(key), 0);
-    int sockfd;
-
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        printf("create socket error: %s(errno: %d)\n", strerror(errno), errno);
-        return 1;
-    }
 
     switch (flag) {
         case 1:
-            if (send(sockfd, key, sizeof(key), 0) < 0) {
+            if (send(fd, key, sizeof(key), 0) < 0) {
                 printf("send msg error: %s(errno: %d)\n", strerror(errno), errno);
                 return 1;
             }
@@ -106,7 +103,7 @@ int send_message(int flag) {
         case 2:
 
             //if (start == "1" || game == "3") {
-            if (send(sockfd, ready, sizeof(ready), 0) < 0) {
+            if (send(fd, ready, sizeof(ready), 0) < 0) {
                 printf("send msg error: %s(errno: %d)\n", strerror(errno), errno);
                 return 1;
             }
@@ -123,17 +120,16 @@ int send_message(int flag) {
     return 0;
 }
 int _read() {//
-    int sockfd;
     char s[1024];
 
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         printf("create socket error: %s(errno: %d)\n", strerror(errno), errno);
         return 1;
     }
 
     while (!read_signal) {
         memset(s, 0, sizeof(s));
-        int rc = recv(sockfd, s, sizeof(s), 0);
+        int rc = recv(fd, s, sizeof(s), 0);
 
         if (rc <= 0) { //代表socket被关闭（0）或者出错（-1）
             printf("socket disconnect!");
@@ -155,20 +151,16 @@ int _read() {//
     return 0;
 }
 int heartbeat() {
-    int sockfd;
     char beat[] = "(H)";
-
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        printf("create socket error: %s(errno: %d)\n", strerror(errno), errno);
-        return 1;
-    }
+    printf("%s: %d\n", __FILE__, __LINE__);
 
     while (!heart_signal) {
-        if (send(sockfd, beat, sizeof(beat), 0) < 0) {
+        if (send(fd, beat, sizeof(beat), 0) < 0) {
             printf("send msg error: %s(errno: %d)\n", strerror(errno), errno);
             return 1;
         }
 
+        printf("%s: %d\n", __FILE__, __LINE__);
         sleep(1);
     }
 
@@ -211,7 +203,6 @@ int get_server_data(char *buf) {
 
 int send_operating(enum move_operating move_op, bool is_fire) {
     char s[1024];
-    int sockfd;
     memset(s, '\0', sizeof(s));
 
     if (move_op == move_op_stay && is_fire != 0) {//不动，发炮？
@@ -250,11 +241,6 @@ int send_operating(enum move_operating move_op, bool is_fire) {
         strncpy(s, "A@d ", 4);
     }
 
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        printf("create socket error: %s(errno: %d)\n", strerror(errno), errno);
-        return 1;
-    }
-
-    int sc = send(sockfd, s, sizeof(s), 0);
+    int sc = send(fd, s, sizeof(s), 0);
     return 0;
 }
