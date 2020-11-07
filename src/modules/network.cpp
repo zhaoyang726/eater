@@ -28,6 +28,10 @@ int send_message(int flag);
 int connect(uint32_t ip_addr, uint32_t port)
 
 {
+    char key[] = "(c96f4d7661c94cbb9706469649a7cbbc)";
+    char ready[] = "(READY)";
+    char s[1024];
+
     if (!ip_addr) {
         printf("ip_addr is null!\n");
         return  1;
@@ -60,7 +64,32 @@ int connect(uint32_t ip_addr, uint32_t port)
         return EXIT_FAILURE;
     }
 
-    printf("%s: %d\n", __FILE__, __LINE__);
+    send(fd, key, sizeof(key), 0);
+    int rc = recv(fd, s, sizeof(s), 0);
+
+    if (!strcmp("[OK]", s)) {
+        strncpy(ok, "[OK]", 4);
+    }
+
+    if (!strcmp("[OK]", ok)) {
+        printf("%s: %d\n", __FILE__, __LINE__);
+        sleep(1);
+        memset(s, 0, sizeof(s));
+        recv(fd, s, sizeof(s), 0);
+        printf("%s: %d\n", __FILE__, __LINE__);
+        printf("ok %s\n", s);
+
+        if (strcmp("START 1 5", s)) {
+            send(fd, ready, sizeof(ready), 0);
+            printf("start %s\n", s);
+            memset(s, 0, sizeof(s));
+            sleep(1);
+            recv(fd, s, sizeof(s), 0);
+            printf("start111 %s\n", s);
+            printf("%s: %d\n", __FILE__, __LINE__);
+        }
+    }
+
     /*if (!send_message(send_code)) {
         if (start_heartbeat_thread()) {
             printf("error to start heartbeat_thread!");
@@ -120,19 +149,21 @@ int send_message(int flag) {
 }
 int _read() {//
     char s[1024];
-    printf("%s: %d\n", __FILE__, __LINE__);
-    char key[] = "(c96f4d7661c94cbb9706469649a7cbbc)";
-    send(fd, key, sizeof(key), 0);
-    printf("%s: %d\n", __FILE__, __LINE__);
+    //char ready[] = "(READY)";
+    //send(fd, key, sizeof(key), 0);
+    //send(fd, ready, sizeof(ready), 0);
+    //recv(fd, s, sizeof(s), 0);
+    printf("read signal is %d", !read_signal);
 
     while (!read_signal) {
         memset(s, 0, sizeof(s));
+        printf("%s: %d\n", __FILE__, __LINE__);
         int rc = recv(fd, s, sizeof(s), 0);
         printf("%s: %d\n", __FILE__, __LINE__);
 
         if (rc <= 0) { //代表socket被关闭（0）或者出错（-1）
             printf("socket disconnect!");
-            break;git
+            break;
         }
 
         printf("%s: %d\n", __FILE__, __LINE__);
@@ -152,13 +183,12 @@ int _read() {//
         sleep(1);
     }
 
+    read_signal = 1;
     return 0;
 }
 int heartbeat() {
-    char key[] = "(c96f4d7661c94cbb9706469649a7cbbc)";
     char beat[] = "(H)";
-    char s[1024];
-    send(fd, key, sizeof(key), 0);
+    char s[1024][1024];
     printf("%s: %d\n", __FILE__, __LINE__);
 
     while (!heart_signal) {
@@ -181,7 +211,7 @@ int start_read_thread() {
 }
 
 int finish_read_thread() {
-    heart_signal = 1;
+    read_signal = 1;
     read_t->join();
     std::thread *read_t = NULL;
     delete read_t;
@@ -206,7 +236,7 @@ int disconnect() {
     return 0;
 }
 int get_server_data(char *buf) {
-    printf("client receive:%s\n", buf);
+    printf("get_server_data:%s\n", buf);
     return 0;
 }
 

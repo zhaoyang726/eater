@@ -39,7 +39,7 @@ int main()
 		server_addr.sin_port = htons(9000);
 
 		ret = bind(listen_fd, (struct sockaddr *)&server_addr, sizeof(server_addr));
-		if (ret == 1) {
+		if (ret == -1) {
 			perror("bind");
 			return;
 		}
@@ -97,7 +97,7 @@ int main()
 
 		close(conn_fd);
 	});
-
+	sleep(1);
 	ret = connect(0x7f000001, 9000);
 	assert(ret == 0);
 

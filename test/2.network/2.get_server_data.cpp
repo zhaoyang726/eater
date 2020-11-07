@@ -20,10 +20,10 @@ const char *data =
     "[LOCATION C! 0 1 2 3 4 5 6 7]"
     "[SCORE 0 0 0 0 0 0 0 0]";
 
+
 int main() {
     int ret;
     ret = connect(0x7f000001, 9000);
-    printf("%s: %d\n", __FILE__, __LINE__);
     assert(ret == 1);
     std::thread server_thread([]() ->void {
         int listen_fd, ret;
@@ -44,7 +44,7 @@ int main() {
 
         ret = bind(listen_fd, (struct sockaddr *)&server_addr, sizeof(server_addr));
 
-        if (ret == 1) {
+        if (ret == -1) {
             perror("bind");
             return;
         }
@@ -63,8 +63,12 @@ int main() {
             return;
         }
         int n = recv(conn_fd, buf, 128, 0);
+        //printf("buf ---%s\n", buf);
+
         assert(n > 0);
         buf[n] = 0;
+        printf("%s: %d\n", __FILE__, __LINE__);
+
         assert(strcmp(buf, "(c96f4d7661c94cbb9706469649a7cbbc)") == 0);
         send(conn_fd, "[OK]", 4, 0);
         printf("%s: %d\n", __FILE__, __LINE__);
@@ -78,22 +82,29 @@ int main() {
         buf[n] = 0;
         assert(strcmp(buf, "(READY)") == 0);
         send(conn_fd, "[OK]", 4, 0);
-
         sleep(1);
+        printf("%s: %d\n", __FILE__, __LINE__);
+
         send(conn_fd, data, sizeof(data), 0);
+        printf("hhh send %s\n", data);
+        printf("%s: %d\n", __FILE__, __LINE__);
+
         close(conn_fd);
     });
+    sleep(1);
     printf("%s: %d\n", __FILE__, __LINE__);
     ret = connect(0x7f000001, 9000);
     printf("%s: %d\n", __FILE__, __LINE__);
     assert(ret == 0);
     printf("%s: %d\n", __FILE__, __LINE__);
     ret = start_read_thread();
+    sleep(5);
     assert(ret == 0);
     printf("%s: %d\n", __FILE__, __LINE__);
     char buf[1 << 12];
     ret = get_server_data(buf);
     assert(ret == 0);
+    printf("buf is %s\n", buf);
     assert(strcmp(buf, data) == 0);
     printf("%s: %d\n", __FILE__, __LINE__);
     ret = finish_read_thread();
