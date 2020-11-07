@@ -85,7 +85,7 @@ int main() {
         sleep(1);
         printf("%s: %d\n", __FILE__, __LINE__);
 
-        send(conn_fd, data, sizeof(data), 0);
+        send(conn_fd, data, strlen(data), 0);
         printf("hhh send %s\n", data);
         printf("%s: %d\n", __FILE__, __LINE__);
 

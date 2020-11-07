@@ -18,18 +18,16 @@ static int heart_signal = 0;
 static char ok[20] = {0};
 static char start[20] = {0};
 static char game[20] = {0};
-static std::thread *read_t = NULL;
-static std::thread *heart_t = NULL;
+static std::thread *read_thread = NULL;
+static std::thread *heart_thread = NULL;
 static int send_code = 1, send_reday = 2;
 static int fd = 0;
 int send_message(int flag);
-
 
 int connect(uint32_t ip_addr, uint32_t port)
 
 {
     char key[] = "(c96f4d7661c94cbb9706469649a7cbbc)";
-    char ready[] = "(READY)";
     char s[1024];
 
     if (!ip_addr) {
@@ -69,32 +67,14 @@ int connect(uint32_t ip_addr, uint32_t port)
 
     if (!strcmp("[OK]", s)) {
         strncpy(ok, "[OK]", 4);
-    }
-
-    if (!strcmp("[OK]", ok)) {
-        printf("%s: %d\n", __FILE__, __LINE__);
-        sleep(1);
-        memset(s, 0, sizeof(s));
-        recv(fd, s, sizeof(s), 0);
-        printf("%s: %d\n", __FILE__, __LINE__);
-        printf("ok %s\n", s);
-
-        if (strcmp("START 1 5", s)) {
-            send(fd, ready, sizeof(ready), 0);
-            printf("start %s\n", s);
-            memset(s, 0, sizeof(s));
-            sleep(1);
-            recv(fd, s, sizeof(s), 0);
-            printf("start111 %s\n", s);
-            printf("%s: %d\n", __FILE__, __LINE__);
-        }
+        printf("HHH\n");
     }
 
     /*if (!send_message(send_code)) {
         if (start_heartbeat_thread()) {
             printf("error to start heartbeat_thread!");
             return 1;
-        }
+        } //write(Pipe[1],"true",5);
     } else {
         printf("send code faild!");
         return 1;
@@ -103,7 +83,7 @@ int connect(uint32_t ip_addr, uint32_t port)
     printf("%s: %d\n", __FILE__, __LINE__);
 
     if (!send_message(send_reday)) {
-        if (start_read_thread()) {
+        if (start_read_threadhread()) {
             printf("error to start heartbeat_thread!");
             return 1;
         }
@@ -149,11 +129,31 @@ int send_message(int flag) {
 }
 int _read() {//
     char s[1024];
-    //char ready[] = "(READY)";
+    char ready[] = "(READY)";
+    char buffer[10];
     //send(fd, key, sizeof(key), 0);
     //send(fd, ready, sizeof(ready), 0);
     //recv(fd, s, sizeof(s), 0);
-    printf("read signal is %d", !read_signal);
+
+    //Flag=false;
+    if (!strcmp("[OK]", ok)) {
+        printf("%s: %d\n", __FILE__, __LINE__);
+        memset(s, 0, sizeof(s));
+        recv(fd, s, sizeof(s), 0);
+        printf("%s: %d\n", __FILE__, __LINE__);
+        printf("ok %s\n", s);
+
+        if (!strcmp("[START 1 5]", s)) {
+            send(fd, ready, sizeof(ready), 0);
+            printf("start %s\n", s);
+            memset(s, 0, sizeof(s));
+            recv(fd, s, sizeof(s), 0);
+            printf("start111 %s\n", s);
+            printf("%s: %d\n", __FILE__, __LINE__);
+        }
+    }
+
+    printf("read signal is %d\n", !read_signal);
 
     while (!read_signal) {
         memset(s, 0, sizeof(s));
@@ -167,6 +167,7 @@ int _read() {//
         }
 
         printf("%s: %d\n", __FILE__, __LINE__);
+        printf("client receive:%s\n", s);
         /*else if (sizeof(s) == 12) {
             strncpy(start, "1", 1);
         } else if (s == "[OK]") {
@@ -179,8 +180,6 @@ int _read() {//
             get_server_data(s);//不是前面的数据则是地图数据，传给get_server_data
         }
         */
-        printf("client receive:%s\n", s);
-        sleep(1);
     }
 
     read_signal = 1;
@@ -188,7 +187,7 @@ int _read() {//
 }
 int heartbeat() {
     char beat[] = "(H)";
-    char s[1024][1024];
+    char s[1024];
     printf("%s: %d\n", __FILE__, __LINE__);
 
     while (!heart_signal) {
@@ -206,28 +205,28 @@ int heartbeat() {
     return 0;
 }
 int start_read_thread() {
-    read_t = new std::thread(_read);
+    read_thread = new std::thread(_read);
     return 0;
 }
 
 int finish_read_thread() {
     read_signal = 1;
-    read_t->join();
-    std::thread *read_t = NULL;
-    delete read_t;
+    read_thread->join();
+    delete read_thread;
+    read_thread = NULL;
     return 0;
 }
 
 int start_heartbeat_thread() {
-    heart_t = new std::thread(heartbeat);
+    heart_thread = new std::thread(heartbeat);
     return 0;
 }
 
 int finish_heartbeat_thread() {
     heart_signal = 1;
-    heart_t->join();
-    std::thread *heart_t = NULL;
-    delete heart_t;
+    heart_thread->join();
+    delete heart_thread;
+    heart_thread = NULL;
     return 0;
 }
 
