@@ -22,14 +22,14 @@ static int heart_signal = 0;
 static char ok[20] = {0};
 static char start[20] = {0};
 static char game[20] = {0};
-static char bufs[20] = {0};
-
+static char bufs[200] = {0};
+std::string a;
 static std::thread *read_thread = NULL;
 static std::thread *heart_thread = NULL;
 static int send_code = 1, send_reday = 2;
 static int fd = 0;
 int send_message(int flag);
-int str_cmp(char *p1, char   *p2) {
+int str_cmp(char const *p1, char const *p2) {
     int i, c;
 
     for (i = 0; p1[i] != '\0' && p2[i] != '\0'; i++) {
@@ -144,28 +144,44 @@ int send_message(int flag) {
     heart_signal = 0;
     return 0;
 }
+
+
+
 int _read() {//
     char s[1024];
     char ready[] = "(READY)";
     char buffer[10];
+    char str[1024];
 
-    if (!strcmp("[OK]", ok)) {
+    if (!str_cmp("[OK]", ok)) {
         printf("%s: %d\n", __FILE__, __LINE__);
         memset(s, 0, sizeof(s));
         recv(fd, s, sizeof(s), 0);
         printf("%s: %d\n", __FILE__, __LINE__);
         printf("ok %s\n", s);
 
-        if (!strcmp("[START 1 5]", s)) {
+        for (int i = 0; i <= 5; i++) {
+            str[i] = s[i] ;
+        }
+
+        memset(str, 0, sizeof(str));
+        printf("str %s\n", str);
+
+        if (!str_cmp("[START", str)) {
             send(fd, ready, sizeof(ready), 0);
-            printf("start %s\n", s);
             memset(s, 0, sizeof(s));
             recv(fd, s, sizeof(s), 0);
             printf("%s: %d\n", __FILE__, __LINE__);
         }
     }
 
+    memset(str, 0, sizeof(str));
     printf("read signal is %d\n", !read_signal);
+
+    for (int i = sizeof(s)/sizeof(char)-1; i < 10; i--) {
+        str[i] = s[i] ;
+    }
+        printf("str11111 %s\n", str);
 
     while (!read_signal) {
         memset(s, 0, sizeof(s));
@@ -182,12 +198,16 @@ int _read() {//
         printf("client receive:%s\n", s);
         strncpy(bufs, s, strlen(s));
 
-        if (!strcmp("[GAMEOVER]", s)) {
-            send(fd, ready, sizeof(ready), 0);
+        if (!str_cmp("[GAMEOVER]", s)) {
+            //send(fd, ready, sizeof(ready), 0);
+            read_signal = 1;
+            finish_heartbeat_thread();
+            disconnect();
         }
     }
 
-    read_signal = 1;
+    exit(0);
+    //read_signal = 1;
     return 0;
 }
 int heartbeat() {
