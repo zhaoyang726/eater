@@ -82,11 +82,6 @@ int connect(uint32_t ip_addr, uint32_t port)
 
     send(fd, key, sizeof(key), 0);
     int rc = recv(fd, s, sizeof(s), 0);
-
-    if (!str_cmp("[OK]", s)) {
-        strncpy(ok, "[OK]", 4);
-    }
-
     /*if (!send_message(send_code)) {
         if (start_heartbeat_thread()) {
             printf("error to start heartbeat_thread!");
@@ -150,8 +145,9 @@ int send_message(int flag) {
 int _read() {//
     char s[1024];
     char ready[] = "(READY)";
-    char buffer[100];
-    char str[1024];
+    char buffer[1024];
+    char str[10];
+    char str1[10];
 
     while (!read_signal) {
         memset(s, 0, sizeof(s));
@@ -169,7 +165,11 @@ int _read() {//
             str[i] = s[i] ;
         }
 
-        printf("str receive:%s\n", str);
+        for (int a = sizeof(s); a >0; a--) {
+            str1[a] = s[a] ;
+        }
+
+        printf("str receive:%s\n", str1);
         printf("%s: %d\n", __FILE__, __LINE__);
         printf("client receive:%s\n", s);
 
@@ -179,13 +179,15 @@ int _read() {//
             send(fd, ready, sizeof(ready), 0);
             memset(s, 0, sizeof(s));
             recv(fd, s, sizeof(s), 0);
-            while (!strcmp("[OK]", s))
-            {
+
+            while (!strcmp("[OK]", s)) {
                 recv(fd, s, sizeof(s), 0);
             }
-            
+
             printf("client receive1111:%s\n", s);
             printf("%s: %d\n", __FILE__, __LINE__);
+            int size = 50;
+            int *p = new int[size];
             strncpy(bufs, s, sizeof(s));
         } else if (!strcmp("[GAMEOVER]", s)) {
             read_signal = 1;
