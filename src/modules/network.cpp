@@ -150,41 +150,12 @@ int send_message(int flag) {
 int _read() {//
     char s[1024];
     char ready[] = "(READY)";
-    char buffer[10];
+    char buffer[100];
     char str[1024];
-
-    if (!str_cmp("[OK]", ok)) {
-        printf("%s: %d\n", __FILE__, __LINE__);
-        memset(s, 0, sizeof(s));
-        recv(fd, s, sizeof(s), 0);
-        printf("%s: %d\n", __FILE__, __LINE__);
-        printf("ok %s\n", s);
-
-        for (int i = 0; i <= 5; i++) {
-            str[i] = s[i] ;
-        }
-
-        memset(str, 0, sizeof(str));
-        printf("str %s\n", str);
-
-        if (!str_cmp("[START", str)) {
-            send(fd, ready, sizeof(ready), 0);
-            memset(s, 0, sizeof(s));
-            recv(fd, s, sizeof(s), 0);
-            printf("%s: %d\n", __FILE__, __LINE__);
-        }
-    }
-
-    memset(str, 0, sizeof(str));
-    printf("read signal is %d\n", !read_signal);
-
-    for (int i = sizeof(s)/sizeof(char)-1; i < 10; i--) {
-        str[i] = s[i] ;
-    }
-        printf("str11111 %s\n", str);
 
     while (!read_signal) {
         memset(s, 0, sizeof(s));
+        memset(str, 0, sizeof(str));
         printf("%s: %d\n", __FILE__, __LINE__);
         int rc = recv(fd, s, sizeof(s), 0);
         printf("%s: %d\n", __FILE__, __LINE__);
@@ -194,20 +165,36 @@ int _read() {//
             break;
         }
 
+        for (int i = 0; i <= 5; i++) {
+            str[i] = s[i] ;
+        }
+
+        printf("str receive:%s\n", str);
         printf("%s: %d\n", __FILE__, __LINE__);
         printf("client receive:%s\n", s);
-        strncpy(bufs, s, strlen(s));
 
-        if (!str_cmp("[GAMEOVER]", s)) {
-            //send(fd, ready, sizeof(ready), 0);
+        if (!strcmp("[OK]", s)) {
+            printf("%s: %d\n", __FILE__, __LINE__);
+        } else if (!strcmp("[START", str)) {
+            send(fd, ready, sizeof(ready), 0);
+            memset(s, 0, sizeof(s));
+            recv(fd, s, sizeof(s), 0);
+            while (!strcmp("[OK]", s))
+            {
+                recv(fd, s, sizeof(s), 0);
+            }
+            
+            printf("client receive1111:%s\n", s);
+            printf("%s: %d\n", __FILE__, __LINE__);
+            strncpy(bufs, s, sizeof(s));
+        } else if (!strcmp("[GAMEOVER]", s)) {
             read_signal = 1;
             finish_heartbeat_thread();
             disconnect();
+            exit(0);
         }
     }
 
-    exit(0);
-    //read_signal = 1;
     return 0;
 }
 int heartbeat() {
