@@ -63,7 +63,6 @@ int main() {
             return;
         }
         int n = recv(conn_fd, buf, 128, 0);
-        //printf("buf ---%s\n", buf);
 
         assert(n > 0);
         buf[n] = 0;
@@ -86,7 +85,6 @@ int main() {
         printf("%s: %d\n", __FILE__, __LINE__);
 
         send(conn_fd, data, strlen(data), 0);
-        printf("hhh send %s\n", data);
         printf("%s: %d\n", __FILE__, __LINE__);
 
         close(conn_fd);

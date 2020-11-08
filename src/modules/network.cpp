@@ -13,17 +13,35 @@
 #include <thread>
 #include "modules/network.h"
 #include <string>
+/*#include <boost/thread/mutex.hpp>
+#include <boost/thread/thread.hpp>
+
+boost::mutex mutex;*/
 static int read_signal = 0;
 static int heart_signal = 0;
 static char ok[20] = {0};
 static char start[20] = {0};
 static char game[20] = {0};
+static char bufs[20] = {0};
+
 static std::thread *read_thread = NULL;
 static std::thread *heart_thread = NULL;
 static int send_code = 1, send_reday = 2;
 static int fd = 0;
 int send_message(int flag);
+int str_cmp(char *p1, char   *p2) {
+    int i, c;
 
+    for (i = 0; p1[i] != '\0' && p2[i] != '\0'; i++) {
+        if (p1[i] == p2[i]) {
+            c = 0;
+        } else if (p1[i] != p2[i]) {
+            c = p1[i] - p2[i];
+        }
+    }
+
+    return c;
+}
 int connect(uint32_t ip_addr, uint32_t port)
 
 {
@@ -65,9 +83,8 @@ int connect(uint32_t ip_addr, uint32_t port)
     send(fd, key, sizeof(key), 0);
     int rc = recv(fd, s, sizeof(s), 0);
 
-    if (!strcmp("[OK]", s)) {
+    if (!str_cmp("[OK]", s)) {
         strncpy(ok, "[OK]", 4);
-        printf("HHH\n");
     }
 
     /*if (!send_message(send_code)) {
@@ -131,11 +148,7 @@ int _read() {//
     char s[1024];
     char ready[] = "(READY)";
     char buffer[10];
-    //send(fd, key, sizeof(key), 0);
-    //send(fd, ready, sizeof(ready), 0);
-    //recv(fd, s, sizeof(s), 0);
 
-    //Flag=false;
     if (!strcmp("[OK]", ok)) {
         printf("%s: %d\n", __FILE__, __LINE__);
         memset(s, 0, sizeof(s));
@@ -148,7 +161,6 @@ int _read() {//
             printf("start %s\n", s);
             memset(s, 0, sizeof(s));
             recv(fd, s, sizeof(s), 0);
-            printf("start111 %s\n", s);
             printf("%s: %d\n", __FILE__, __LINE__);
         }
     }
@@ -168,18 +180,11 @@ int _read() {//
 
         printf("%s: %d\n", __FILE__, __LINE__);
         printf("client receive:%s\n", s);
-        /*else if (sizeof(s) == 12) {
-            strncpy(start, "1", 1);
-        } else if (s == "[OK]") {
-            strncpy(ok, "2", 1);
-        } else if (s == "[GAMEOVER]") {
-            strncpy(start, "3", 1);
-        }
+        strncpy(bufs, s, strlen(s));
 
-        else {
-            get_server_data(s);//不是前面的数据则是地图数据，传给get_server_data
+        if (!strcmp("[GAMEOVER]", s)) {
+            send(fd, ready, sizeof(ready), 0);
         }
-        */
     }
 
     read_signal = 1;
@@ -235,6 +240,7 @@ int disconnect() {
     return 0;
 }
 int get_server_data(char *buf) {
+    strncpy(buf, bufs, strlen(bufs));
     printf("get_server_data:%s\n", buf);
     return 0;
 }
