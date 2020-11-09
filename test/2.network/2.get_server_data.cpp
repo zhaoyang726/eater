@@ -75,7 +75,6 @@ int main() {
 
         sleep(1);
         send(conn_fd, "[START 1 5]", sizeof("[START 1 5]"), 0);
-
         n = recv(conn_fd, buf, 128, 0);
         assert(n > 0);
         buf[n] = 0;
