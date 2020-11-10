@@ -79,9 +79,9 @@ int main() {
         assert(n > 0);
         buf[n] = 0;
         assert(strcmp(buf, "(READY)") == 0);
-        send(conn_fd, "[OK]", 4, 0);
-        sleep(1);
-        printf("%s: %d\n", __FILE__, __LINE__);
+        //send(conn_fd, "[OK]", 4, 0);
+        //sleep(1);
+        //printf("%s: %d\n", __FILE__, __LINE__);
 
         send(conn_fd, data, strlen(data), 0);
         printf("%s: %d\n", __FILE__, __LINE__);

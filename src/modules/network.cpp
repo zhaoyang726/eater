@@ -15,23 +15,20 @@
 
 static int read_signal = 0;
 static int heart_signal = 0;
-static char bufs[1024] = {0};
+static char *bufs;
 static char flag_[10] = {0};
 static std::thread *read_thread = NULL;
 static std::thread *heart_thread = NULL;
 static int num;
 static int map;
-static char w [1024];
 static char *buf;
 static int fd = 0;
-static char *p = new char[map * map + 100];
-static char ok[] = "[OK]";
-static char start[] = "[START";
-static char game[] = "[GAMEOVER]";
+static char *point ;
+
 
 int connect(uint32_t ip_addr, uint32_t port) {
     char key[] = "(c96f4d7661c94cbb9706469649a7cbbc)";
-    char s[1024];
+    char s[128];
 
     if (!ip_addr) {
         printf("ip_addr is null!\n");
@@ -75,83 +72,75 @@ int connect(uint32_t ip_addr, uint32_t port) {
         return EXIT_FAILURE;
     }
 
+    if (!strcmp("[ERROR]", s)) {
+        printf("recieve error :%s: %d\n", __FILE__, __LINE__);
+        return EXIT_FAILURE;
+    }
+
     return 0;
 }
 
 
-int _read() {
-    char s[1024];
-    char ready[] = "(READY)";
-    char str[10];
+int read_data() {
+    int n = 20;
+    point = new char[n];
 
     while (!read_signal) {
-        memset(s, 0, sizeof(s));
-        int rc = recv(fd, s, sizeof(s), 0);
+        memset(point, 0, n);
+        int rc = recv(fd, point, n, 0);
 
         if (rc <= 0) {
             printf("recieve error :%s: %d\n", __FILE__, __LINE__);
             return EXIT_FAILURE;
         }
 
-        strncpy(start, s, 1024);
-        sscanf(start, "%s %d %d", w, &num, &map);
-        printf("%s: %d\n", __FILE__, __LINE__);
-
-        if (!strcmp(ok, s)) {
+        if (!strncmp("[OK]", point, 4)) {
             printf("%s: %d\n", __FILE__, __LINE__);
-        } else if (!strncmp(start, w, 5)) {
-            while (!strcmp(ok, s)) {
-                rc = recv(fd, s, sizeof(s), 0);
+            continue;
+        }
 
-                if (rc <= 0) {
-                    printf("recieve error :%s: %d\n", __FILE__, __LINE__);
-                    return EXIT_FAILURE;
-                }
-            }
-
-            rc = send(fd, ready, sizeof(ready), 0);
-
-            if (rc <= 0) {
-                printf("send error :%s: %d\n", __FILE__, __LINE__);
-                return EXIT_FAILURE;
-            }
-
-            memset(s, 0, sizeof(s));
-            rc = recv(fd, s, sizeof(s), 0);
+        if (!strncmp(point, "[START" , 5)) {
+            sscanf(point, "[START %d %d", &num, &map);
+            rc = send(fd, "(READY)", 8, 0);
 
             if (rc <= 0) {
                 printf("recieve error :%s: %d\n", __FILE__, __LINE__);
                 return EXIT_FAILURE;
             }
 
-            while (!strcmp(ok, s)) {
-                rc = recv(fd, s, sizeof(s), 0);
+            delete []point;
+            point = NULL;
+            n = map * map + 100;
+            point = new char[n];
+            bufs = new char[n];
+
+            while (!read_signal) {
+                int rc = recv(fd, point, n, 0);
 
                 if (rc <= 0) {
                     printf("recieve error :%s: %d\n", __FILE__, __LINE__);
                     return EXIT_FAILURE;
                 }
-            }
 
-            printf("%s: %d\n", __FILE__, __LINE__);
-            strncpy(p, s, sizeof(s));
-            printf("client receive:%s\n", p);
-            sscanf(s, "%s %s ", str, flag_);
-        } else if (!strcmp(game, s)) {
-            read_signal = 1;
-            finish_heartbeat_thread();
-            disconnect();
+                if (!strcmp("[GAMEOVER]", point)) {
+                    read_signal = 1;
+                    finish_heartbeat_thread();
+                    delete []point;
+                    delete []bufs;
+                    disconnect();
+                    exit(0);
+                }
+
+                strcpy(bufs, point);
+            }
         }
     }
 
     return 0;
 }
 int heartbeat() {
-    char beat[] = "(H)";
-    printf("%s: %d\n", __FILE__, __LINE__);
-
     while (!heart_signal) {
-        int rc = send(fd, beat, sizeof(beat), 0);
+        int rc = send(fd, "(H)", 3, 0);
 
         if (rc <= 0) {
             printf("socket disconnect!");
@@ -165,7 +154,7 @@ int heartbeat() {
     return 0;
 }
 int start_read_thread() {
-    read_thread = new std::thread(_read);
+    read_thread = new std::thread(read_data);
     return 0;
 }
 
@@ -174,8 +163,7 @@ int finish_read_thread() {
     read_thread->join();
     delete read_thread;
     read_thread = NULL;
-    p = NULL; //???
-    delete []p;
+    delete []point;
     return 0;
 }
 
@@ -198,13 +186,12 @@ int disconnect() {
     return 0;
 }
 int get_server_data(char *buf) {
-    strncpy(buf, p, strlen(p));
-    printf("get_server_data:%s\n", buf);
+    strcpy(buf, bufs);
     return 0;
 }
 
 int send_operating(enum move_operating move_op, bool is_fire) {
-    char s[1024];
+    char s[10];
     memset(s, '\0', sizeof(s));
     char move = ' ';
     char fire = ' ';
