@@ -16,7 +16,7 @@
 static int read_signal = 0;
 static int heart_signal = 0;
 static char *bufs;
-static char flag_[10] = {0};
+static char *flag_;
 static std::thread *read_thread = NULL;
 static std::thread *heart_thread = NULL;
 static int num;
@@ -84,6 +84,7 @@ int connect(uint32_t ip_addr, uint32_t port) {
 int read_data() {
     int n = 20;
     point = new char[n];
+    char *ret;
 
     while (!read_signal) {
         memset(point, 0, n);
@@ -113,26 +114,17 @@ int read_data() {
             n = map * map + 100;
             point = new char[n];
             bufs = new char[n];
+            continue;
+        }
 
-            while (!read_signal) {
-                int rc = recv(fd, point, n, 0);
+        if (!strncmp("[MAP", point, 3)) {
+            sscanf(point, "[MAP %s", flag_);
+            strcpy(bufs, point);
+            continue;
+        }
 
-                if (rc <= 0) {
-                    printf("recieve error :%s: %d\n", __FILE__, __LINE__);
-                    return EXIT_FAILURE;
-                }
-
-                if (!strcmp("[GAMEOVER]", point)) {
-                    read_signal = 1;
-                    finish_heartbeat_thread();
-                    delete []point;
-                    delete []bufs;
-                    disconnect();
-                    exit(0);
-                }
-
-                strcpy(bufs, point);
-            }
+        if (!strcmp("[GAMEOVER]", point)) {
+            
         }
     }
 
